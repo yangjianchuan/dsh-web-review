@@ -531,6 +531,36 @@ describe('pending annotation admission', () => {
     })
   })
 
+  it('reads loaded Skills from derived messages when surface sequence numbers exceed message indexes', async () => {
+    const { agent } = harness()
+    agent.session.append('user/message', createUserMessage({
+      source: { kind: 'skill-invocation', name: 'better-writing', form: 'instructions' },
+      content: [{ type: 'text', text: 'previously loaded instructions' }],
+    }), { surfaceOp: 'append' })
+    const derivedMessages = agent.session.deriveMessages()
+    const sparse = agent.session as unknown as { surface: { nodes: readonly number[] }; events?: readonly unknown[] }
+    Object.defineProperty(sparse, 'events', { value: undefined })
+    Object.defineProperty(agent.session, 'surface', {
+      configurable: true,
+      value: { nodes: [13] },
+    })
+    Object.defineProperty(agent.session, 'deriveMessages', {
+      configurable: true,
+      value: () => derivedMessages,
+    })
+    const state: AnnotationCommitState = new Map()
+    storeAnnotationSnapshot({ get: () => agent }, state, snapshot({ selectedSkills: ['better-writing'] }))
+    const decision = await attach(state, agent, async () => ({ kind: 'enter', messages: [] }))
+    if (decision.kind !== 'enter') throw new Error('expected enter')
+    expect(decision.messages).toHaveLength(2)
+    expect(decision.messages[0]?.content[0]).toMatchObject({
+      type: 'text', text: expect.stringContaining('# Browser comments'),
+    })
+    expect(decision.messages[1]?.content[0]).toMatchObject({
+      type: 'text', text: expect.stringContaining('Apply those instructions'),
+    })
+  })
+
   it('reminds the model after Browser Comments when the selected Skill is already visible', async () => {
     const { agent, agents } = harness()
     agent.session.append('user/message', createUserMessage({

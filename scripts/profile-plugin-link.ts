@@ -65,6 +65,9 @@ export function materializeProfilePluginLink(
     unlinkSync(destination)
   }
   mkdirSync(dirname(destination), { recursive: true })
-  symlinkSync(target, destination, 'dir')
+  // Windows directory symlinks require Developer Mode or elevated privileges.
+  // A junction provides the same package-resolution behavior without that
+  // privilege, and Node reports it as a symbolic link through lstat/readlink.
+  symlinkSync(target, destination, process.platform === 'win32' ? 'junction' : 'dir')
   return destination
 }

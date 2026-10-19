@@ -19,12 +19,38 @@ Select page elements in the built-in browser as you would in a design tool, leav
 
 ## Installation
 
+### Option 1: Install from npm (Recommended)
+
 Install the plugin and start DSH:
 
 ```sh
 dsh plugin --profile web add @canglongcl/dsh-web-review
 dsh web
 ```
+
+### Option 2: Install from GitHub Source
+
+Clone the repository and install the built package into your DSH profile using the built-in installation script:
+
+```sh
+# 1. Clone the repository
+git clone https://github.com/yangjianchuan/dsh-web-review.git
+cd dsh-web-review
+
+# 2. Install dependencies
+pnpm install
+
+# 3. Build and install into DSH profile (defaults to the "web" profile)
+pnpm install:dsh
+
+# 4. Start DSH Web
+dsh web
+```
+
+> **Notes**:
+> - `pnpm install:dsh` automatically runs `pnpm package:official` to assemble the staged package (`dist/package`) and mounts it as a DSH profile bundle layer via `dsh plugin --profile web add file:...`.
+> - To install into another profile (such as `tui`), run `pnpm install:dsh tui`.
+> - If a running DSH instance locks the manifest file (`os error 5` / access denied on Windows), stop the service first (e.g., `& "$HOME\.dsh\start.ps1" -Action stop`). See [docs/local-dsh-install.md](./docs/local-dsh-install.md) for details.
 
 ## Usage
 

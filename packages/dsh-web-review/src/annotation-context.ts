@@ -426,20 +426,33 @@ function decisionSkillNames(messages: readonly UserMessage[]): Set<string> {
 /** Skill bodies that remain on the exact model-visible session surface. */
 export function visibleSkillNames(agent: Pick<Agent, 'session'>): Set<string> {
   const names = new Set<string>()
-  const events = agent.session.events
-  for (const seq of agent.session.surface.nodes) {
-    const event = events[seq]
-    if (event?.type === 'user/message') {
-      const source = event.data.source as { kind?: unknown; name?: unknown }
-      if (source.kind === 'skill-invocation' && typeof source.name === 'string') names.add(source.name)
+  const calls = new Map<string, { index: number; name: string; arguments: string }>()
+  const messages = agent.session.deriveMessages()
+  for (const [index, message] of messages.entries()) {
+    const candidate = message as {
+      role: string
+      source?: { kind?: unknown; name?: unknown; callId?: unknown }
+      content: readonly { type: string; id?: string; name?: string; arguments?: string }[]
+      isError?: boolean
+    }
+    if (candidate.role === 'user') {
+      const source = candidate.source
+      if (source?.kind === 'skill-invocation' && typeof source.name === 'string') names.add(source.name)
       continue
     }
-    if (event?.type !== 'tool/result' || event.data.message.content[0]?.isError === true) continue
-    const callSeq = event.sourceEventSeqs?.[0]
-    const call = callSeq === undefined ? undefined : events[callSeq]
-    if (call?.type !== 'tool/call' || call.data.name !== 'skill') continue
+    if (candidate.role === 'assistant') {
+      for (const block of candidate.content) {
+        if (block.type === 'tool-call' && block.id !== undefined && block.name !== undefined && block.arguments !== undefined) {
+          calls.set(block.id, { index, name: block.name, arguments: block.arguments })
+        }
+      }
+      continue
+    }
+    if (candidate.role !== 'tool' || candidate.isError === true || typeof candidate.source?.callId !== 'string') continue
+    const call = calls.get(candidate.source.callId)
+    if (call === undefined || call.index >= index || call.name !== 'skill') continue
     try {
-      const args = JSON.parse(call.data.arguments) as { name?: unknown }
+      const args = JSON.parse(call.arguments) as { name?: unknown }
       if (typeof args.name === 'string') names.add(args.name)
     } catch {
       // Malformed historical tool arguments cannot prove that a Skill loaded.

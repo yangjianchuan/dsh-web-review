@@ -19,12 +19,64 @@
 
 ## 安装
 
+### 方式一：从 npm 安装（推荐）
+
 安装并启动：
 
 ```sh
 dsh plugin --profile web add @canglongcl/dsh-web-review
 dsh web
 ```
+
+### 方式二：从 GitHub 源码安装
+
+克隆仓库并使用内置安装脚本将本地构建包安装到 DSH 指定 Profile：
+
+```sh
+# 1. 克隆仓库
+git clone https://github.com/yangjianchuan/dsh-web-review.git
+cd dsh-web-review
+
+# 2. 安装依赖并构建插件包
+pnpm install
+
+# 3. 安装到 DSH profile（默认安装到 web profile）
+pnpm install:dsh
+
+# 4. 启动 DSH Web
+dsh web
+```
+
+> **提示**：
+> - `pnpm install:dsh` 会自动执行 `pnpm package:official` 生成官方包构件（`dist/package`），并通过 `dsh plugin --profile web add file:...` 将其挂载为 DSH Profile Bundle Layer。
+> - 若需安装到其他 profile（如 `tui`），可执行 `pnpm install:dsh tui`。
+> - 若当前已有运行中的 DSH Web 实例导致配置文件锁死（报 `拒绝访问` 或 `os error 5`），请先停止服务后再安装（例如 `& "$HOME\.dsh\start.ps1" -Action stop`）。详细说明见 [docs/local-dsh-install.md](./docs/local-dsh-install.md)。
+
+### 更新插件
+
+如果你是通过 GitHub 源码安装的，进入之前克隆的仓库，拉取最新代码并重新构建、安装：
+
+```powershell
+# 1. 进入之前克隆的仓库目录
+cd dsh-web-review
+
+# 2. 获取最新代码并安装更新
+git pull
+pnpm install
+pnpm install:dsh
+
+# 3. 重启 DSH Web，让新版本生效（标准方式）
+# 先在运行 DSH Web 的终端按 Ctrl+C 停止服务，再执行：
+dsh web
+```
+
+如果你的 Windows 环境使用本地服务管理脚本，也可以通过下面的命令重启：
+
+```powershell
+& "$HOME\.dsh\start.ps1" -Action restart
+```
+
+> **注意：** `pnpm install:dsh` 会重新构建官方插件包并安装到 `web` Profile，但不会自动重启 DSH Web。如果安装时提示清单文件访问被拒绝（Windows `os error 5`），请先停止 DSH Web，再安装并重新启动。更多说明见 [本地安装与验证指南](./docs/local-dsh-install.md)。
 
 ## 使用方法
 
