@@ -8,7 +8,10 @@
     "declarationMap": false,
     "sourceMap": false,
     "jsx": "react-jsx",
-    "lib": ["ES2024", "DOM", "DOM.Iterable"]
+    "lib": ["ES2024", "DOM", "DOM.Iterable"],
+    "paths": {
+      "@deepseek-ai/dsh-client-store": ["./packages/dsh-web-review/node_modules/@deepseek-ai/dsh-client-runtime/lib/types/client/index.d.ts"]
+    }
   },
   "include": [
     "packages/dsh-web-review/src",

@@ -5,6 +5,20 @@ All notable changes to `dsh-web-review` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+
+- `pnpm install:dsh [profile]` installs this checkout into a DSH profile through `dsh plugin add`, which also mounts it as a profile bundle layer
+- `scripts/verify-live-tab.mjs` drives the running GUI and asserts the preview tab mounts without slot crashes
+
+### Fixed
+
+- send annotation context with a producer-owned message source so DSH session format v4 accepts it, while still reading the retired `{ kind: 'plugin' }` wrapper from earlier sessions
+- resolve client icons against either host primitive line (`*OutlineRegular` on 0.2.x, size-suffixed names on rc.8) instead of pinning one, and degrade to a placeholder glyph rather than an undefined component (React #130)
+- import the store factory from `@deepseek-ai/dsh-client-store`, the module the web frontend actually seeds; the removed `@deepseek-ai/dsh-client-runtime/client` specifier made the whole plugin fail to activate
+- read the session transcript structurally, so the annotation dock works with both the rc.8 ordered array and the 0.2.x keyed collection (`order` + `nodes.get`) instead of crashing the dock slot
+
 ## [0.5.0] - 2026-08-25
 
 ## [0.5.0-beta.1] - 2026-08-25

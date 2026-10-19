@@ -11,6 +11,7 @@ packages/dsh-web-review/entry-name.json
 # Environment and logs
 .env*
 *.log
+.workbuddy/
 
 # Test artifacts
 coverage/

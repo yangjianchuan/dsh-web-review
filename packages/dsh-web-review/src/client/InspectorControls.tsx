@@ -4,6 +4,8 @@ import {
   IconChevronDownOutline14,
   IconLinkOutline14,
   IconRefreshOutline14,
+} from './icons.ts'
+import {
   Menu,
   type MenuEntry,
 } from '@deepseek-ai/dsh-client-ui-primitives'

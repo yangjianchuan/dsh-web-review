@@ -15,6 +15,7 @@ export default defineConfig({
     dedupe: ['react', 'react-dom'],
     alias: {
       '@deepseek-ai/dsh-client-runtime/client': `${ROOT}packages/dsh-web-review/tests/support/runtime-client.ts`,
+      '@deepseek-ai/dsh-client-store': `${ROOT}packages/dsh-web-review/tests/support/runtime-client.ts`,
       '@deepseek-ai/dsh-client-ui-primitives': `${ROOT}packages/dsh-web-review/tests/support/ui-primitives.tsx`,
     },
   },

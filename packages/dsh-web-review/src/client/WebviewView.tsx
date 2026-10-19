@@ -32,8 +32,8 @@ import {
   IconSendOutline16,
   IconTrashOutline16,
   IconWarningOutline16,
-  Input,
-} from '@deepseek-ai/dsh-client-ui-primitives'
+} from './icons.ts'
+import { Input } from '@deepseek-ai/dsh-client-ui-primitives'
 import type { BakedActions, InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import type { ObservableSnapshot } from '@deepseek-ai/dsh-client-runtime/client'
 import { ANNOTATION_LIMITS, MAX_ANNOTATIONS } from '../annotation-contract.ts'

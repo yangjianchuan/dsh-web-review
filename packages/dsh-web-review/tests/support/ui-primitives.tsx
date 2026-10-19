@@ -107,3 +107,24 @@ export const IconRightUpOutline16 = icon('right-up')
 export const IconSendOutline16 = icon('send')
 export const IconTrashOutline16 = icon('trash')
 export const IconWarningOutline16 = icon('warning')
+
+/**
+ * `src/client/icons.ts` resolves against this export table at import time and
+ * prefers the 0.2.x spellings, so the stub publishes both lines as the same
+ * component; a checkout typechecked against either primitive line gets a glyph.
+ */
+export const IconCheckOutlineRegular = IconCheckOutline16
+export const IconBrowseOutlineRegular = IconBrowseOutline16
+export const IconChevronDownOutlineRegular = IconChevronDownOutline14
+export const IconChevronLeftOutlineRegular = IconChevronLeftOutline14
+export const IconChevronRightOutlineRegular = IconChevronRightOutline14
+export const IconCloseOutlineRegular = IconCloseOutline16
+export const IconLinkOutlineRegular = IconLinkOutline14
+export const IconLoadingOutlineRegular = IconLoadingOutline16
+export const IconNewChatOutlineRegular = IconNewChatOutline16
+export const IconQueueOutlineRegular = IconQueueOutline14
+export const IconRefreshOutlineRegular = IconRefreshOutline16
+export const IconRightUpOutlineRegular = IconRightUpOutline16
+export const IconSendOutlineRegular = IconSendOutline16
+export const IconTrashOutlineRegular = IconTrashOutline16
+export const IconWarningOutlineRegular = IconWarningOutline16

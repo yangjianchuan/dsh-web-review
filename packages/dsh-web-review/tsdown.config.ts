@@ -40,15 +40,21 @@ const PLATFORM_MODULES = [
   '@deepseek-ai/dsh-client-schema-form',
 ] as const
 
-/** The runtime store-engine exemption (snapshot stores live in runtime/client). */
+/**
+ * The store factory's two published homes. rc.8 exposes it through the runtime
+ * exemption; the 0.2.x frontend dropped that specifier and seeds the identical
+ * factory as `@deepseek-ai/dsh-client-store`. Both stay external so the browser
+ * artifact resolves against whichever module table the running host boots.
+ */
 const RUNTIME_STORE_EXEMPTION = '@deepseek-ai/dsh-client-runtime/client'
+const STORE_MODULE = '@deepseek-ai/dsh-client-store'
 
 /** Keep module CSS inside the remotely loaded client artifact. */
 const CSS_VIRTUAL_PREFIX = '\0dsh-web-review-css:'
 const CSS_VIRTUAL_SUFFIX = '.mjs'
 
-/** Externals resolved from the loader module table: platform modules + the runtime exemption. */
-export const CLIENT_EXTERNALS: readonly string[] = [...PLATFORM_MODULES, RUNTIME_STORE_EXEMPTION]
+/** Externals resolved from the loader module table: platform modules + the store homes. */
+export const CLIENT_EXTERNALS: readonly string[] = [...PLATFORM_MODULES, RUNTIME_STORE_EXEMPTION, STORE_MODULE]
 /** Third-party packages intentionally embedded in the browser artifact. */
 const CLIENT_BUNDLED_DEPENDENCIES = ['clsx'] as const
 

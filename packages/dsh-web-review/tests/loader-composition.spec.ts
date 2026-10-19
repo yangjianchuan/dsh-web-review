@@ -9,7 +9,7 @@
  * (the harness's own webserver suite pattern); everything else — fibers,
  * injects, routes, the HTTP stack — is real.
  */
-import { createServer, type Server } from 'node:http'
+import { createServer, request as httpRequest, type Server } from 'node:http'
 import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
@@ -219,6 +219,51 @@ async function createPreview(target: string): Promise<PreviewSessionDescriptor> 
   return descriptor
 }
 
+/** Route synthetic localhost Origins to loopback without relying on wildcard DNS. */
+async function fetchPreview(input: string | URL, init: RequestInit = {}): Promise<Response> {
+  const url = new URL(input)
+  if (!url.hostname.endsWith('.localhost')) return fetch(url, init)
+  const host = url.host
+  const address = `http://127.0.0.1:${url.port}${url.pathname}${url.search}`
+  const headers = new Headers(init.headers)
+  headers.set('host', host)
+  const method = init.method ?? 'GET'
+  const body = init.body
+  const response = await new Promise<{
+    status: number
+    statusText: string
+    headers: Headers
+    body: Buffer
+  }>((resolve, reject) => {
+    const request = httpRequest(address, {
+      method,
+      headers: Object.fromEntries(headers.entries()),
+    }, (incoming) => {
+      const chunks: Buffer[] = []
+      incoming.on('data', (chunk: Buffer | string) => { chunks.push(Buffer.from(chunk)) })
+      incoming.on('end', () => resolve({
+        status: incoming.statusCode ?? 500,
+        statusText: incoming.statusMessage ?? '',
+        headers: new Headers(Object.entries(incoming.headers).flatMap(([name, value]) =>
+          value === undefined ? [] : (Array.isArray(value) ? value : [value]).map(item => [name, String(item)] as [string, string]),
+        )),
+        body: Buffer.concat(chunks),
+      }))
+      incoming.on('error', reject)
+    })
+    request.on('error', reject)
+    if (body instanceof Uint8Array) request.write(body)
+    else if (typeof body === 'string') request.write(body)
+    request.end()
+  })
+  const responseBody = method === 'HEAD' ? null : Uint8Array.from(response.body)
+  return new Response(responseBody, {
+    status: response.status,
+    statusText: response.statusText,
+    headers: response.headers,
+  })
+}
+
 function annotationSnapshot(sessionId = 'session-1', comments = 1): AnnotationSnapshot {
   return {
     sessionId,
@@ -272,7 +317,7 @@ describe('isolated preview Origin (real Loader + webserver composition)', () => 
     const descriptor = await createPreview(fixtureUrl + '/')
     expect(descriptor.frameOrigin).not.toBe(`http://127.0.0.1:${String(port)}`)
     expect(new URL(descriptor.frameOrigin).hostname).toMatch(/^[a-f\d]{32}\.localhost$/u)
-    const response = await fetch(descriptor.frameUrl)
+    const response = await fetchPreview(descriptor.frameUrl)
     expect(response.status).toBe(200)
     expect(response.headers.get('content-type')).toContain('text/html')
     expect(response.headers.get('x-frame-options')).toBeNull()
@@ -290,14 +335,14 @@ describe('isolated preview Origin (real Loader + webserver composition)', () => 
     expect(body).toContain(`href="${PREVIEW_PROXY_PREFIX}http%3A//127.0.0.1%3A${new URL(fixtureUrl).port}/rooted.html"`)
     expect(body).toContain('src="img.png"')
     expect(body).toContain(`action="${PREVIEW_NAVIGATE_PREFIX}http%3A//target.test/submit"`)
-    const stylesheet = await fetch(new URL('style.css', new URL(baseHref, descriptor.frameOrigin)))
+    const stylesheet = await fetchPreview(new URL('style.css', new URL(baseHref, descriptor.frameOrigin)))
     expect(stylesheet.status).toBe(200)
     expect(await stylesheet.text()).toBe('body { color: rebeccapurple; }\n')
   })
 
   it('passes non-HTML through unchanged', async () => {
     await loadComposition()
-    const response = await fetch((await createPreview(fixtureUrl + '/app.js')).frameUrl)
+    const response = await fetchPreview((await createPreview(fixtureUrl + '/app.js')).frameUrl)
     expect(response.status).toBe(200)
     expect(response.headers.get('content-type')).toContain('text/javascript')
     expect(await response.text()).toBe('export const x = 1;\n')
@@ -305,7 +350,7 @@ describe('isolated preview Origin (real Loader + webserver composition)', () => 
 
   it('forwards POST bodies (rewritten form actions)', async () => {
     await loadComposition()
-    const response = await fetch((await createPreview(fixtureUrl + '/submit')).frameUrl, {
+    const response = await fetchPreview((await createPreview(fixtureUrl + '/submit')).frameUrl, {
       method: 'POST',
       headers: { 'content-type': 'application/x-www-form-urlencoded' },
       body: 'a=1&b=2',
@@ -317,7 +362,7 @@ describe('isolated preview Origin (real Loader + webserver composition)', () => 
   it('forwards binary POST bodies without text transcoding', async () => {
     await loadComposition()
     const bytes = Uint8Array.from([0, 255, 128, 13, 10, 1])
-    const response = await fetch((await createPreview(fixtureUrl + '/binary')).frameUrl, {
+    const response = await fetchPreview((await createPreview(fixtureUrl + '/binary')).frameUrl, {
       method: 'POST',
       headers: { 'content-type': 'application/octet-stream' },
       body: bytes,
@@ -329,7 +374,7 @@ describe('isolated preview Origin (real Loader + webserver composition)', () => 
   it('uses the final redirect URL as the document base', async () => {
     await loadComposition()
     const fixturePort = String(new URL(fixtureUrl).port)
-    const response = await fetch((await createPreview(fixtureUrl + '/redirect')).frameUrl)
+    const response = await fetchPreview((await createPreview(fixtureUrl + '/redirect')).frameUrl)
     const body = await response.text()
     expect(body).toContain(
       `<base href="${PREVIEW_PROXY_PREFIX}http%3A//127.0.0.1%3A${fixturePort}/nested/page.html">`,
@@ -339,14 +384,14 @@ describe('isolated preview Origin (real Loader + webserver composition)', () => 
 
   it('matches Fetch POST redirect semantics for 303 and 307', async () => {
     await loadComposition()
-    const converted = await fetch((await createPreview(fixtureUrl + '/post-303')).frameUrl, {
+    const converted = await fetchPreview((await createPreview(fixtureUrl + '/post-303')).frameUrl, {
       method: 'POST', body: 'discarded', headers: { 'content-type': 'text/plain' },
     })
     expect(converted.headers.get('x-seen-method')).toBe('GET')
     expect(await converted.text()).toBe('?redirected=yes')
 
     const bytes = Uint8Array.from([0, 255, 7])
-    const preserved = await fetch((await createPreview(fixtureUrl + '/post-307')).frameUrl, {
+    const preserved = await fetchPreview((await createPreview(fixtureUrl + '/post-307')).frameUrl, {
       method: 'POST', body: bytes, headers: { 'content-type': 'application/octet-stream' },
     })
     expect(new Uint8Array(await preserved.arrayBuffer())).toEqual(bytes)
@@ -354,7 +399,7 @@ describe('isolated preview Origin (real Loader + webserver composition)', () => 
 
   it('promotes query-only proxy references into the encoded target URL', async () => {
     await loadComposition()
-    const response = await fetch(
+    const response = await fetchPreview(
       `${(await createPreview(fixtureUrl + '/query?old=1')).frameUrl}?new=2&next=yes`,
     )
     expect(await response.text()).toBe('?new=2&next=yes')
@@ -362,7 +407,7 @@ describe('isolated preview Origin (real Loader + webserver composition)', () => 
 
   it('forwards HEAD as HEAD and returns no response body', async () => {
     await loadComposition()
-    const response = await fetch((await createPreview(fixtureUrl + '/query')).frameUrl, {
+    const response = await fetchPreview((await createPreview(fixtureUrl + '/query')).frameUrl, {
       method: 'HEAD',
     })
     expect(response.status).toBe(200)
@@ -398,9 +443,9 @@ describe('isolated preview Origin (real Loader + webserver composition)', () => 
   it('returns 502 for unreachable targets and rejects unsupported frame methods', async () => {
     await loadComposition()
     const descriptor = await createPreview('http://127.0.0.1:1/')
-    const response = await fetch(descriptor.frameUrl)
+    const response = await fetchPreview(descriptor.frameUrl)
     expect(response.status).toBe(502)
-    const put = await fetch((await createPreview(fixtureUrl + '/')).frameUrl, { method: 'PUT' })
+    const put = await fetchPreview((await createPreview(fixtureUrl + '/')).frameUrl, { method: 'PUT' })
     expect(put.status).toBe(405)
   })
 
@@ -408,14 +453,14 @@ describe('isolated preview Origin (real Loader + webserver composition)', () => 
     await loadComposition()
     const remote = await createPreview('https://example.com/')
     expect(remote.frameUrl).toContain('/.dsh-web-review/entry/https%3A//example.com/')
-    const redirected = await fetch((await createPreview(fixtureUrl + '/remote-redirect')).frameUrl)
+    const redirected = await fetchPreview((await createPreview(fixtureUrl + '/remote-redirect')).frameUrl)
     expect(redirected.status).toBe(200)
     const handoff = await redirected.text()
     expect(handoff).toContain('"name":"handoff"')
     expect(handoff).toContain('example.com')
 
     const source = await createPreview(fixtureUrl + '/')
-    const getFormHandoff = await fetch(
+    const getFormHandoff = await fetchPreview(
       `${source.frameOrigin}${PREVIEW_NAVIGATE_PREFIX}https%3A//example.com/search?q=review`,
     )
     expect(await getFormHandoff.text()).toContain('search%3Fq%3Dreview')
@@ -437,8 +482,8 @@ describe('isolated preview Origin (real Loader + webserver composition)', () => 
       body: JSON.stringify({ sessionIds: [first.sessionId] }),
     })
     expect(released.status).toBe(204)
-    expect((await fetch(first.frameUrl)).status).toBe(404)
-    expect((await fetch(second.frameUrl)).status).toBe(200)
+    expect((await fetchPreview(first.frameUrl)).status).toBe(404)
+    expect((await fetchPreview(second.frameUrl)).status).toBe(200)
   })
 })
 

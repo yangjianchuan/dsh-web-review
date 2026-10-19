@@ -8,6 +8,7 @@ import {
   ANNOTATION_LIMITS,
   MAX_ANNOTATION_BODY,
   MAX_ANNOTATIONS,
+  annotationSnapshotIdOfSource,
   type AnnotationSnapshot,
 } from '../src/annotation-contract.ts'
 import {
@@ -204,6 +205,20 @@ describe('parseAnnotationBody', () => {
   })
 })
 
+describe('annotationSnapshotIdOfSource', () => {
+  it('accepts the producer-owned source and reads legacy persisted sources', () => {
+    const id = 'snapshot-1'
+    expect(annotationSnapshotIdOfSource({ kind: 'plugin:dsh-web-review', snapshotId: id })).toBe(id)
+    expect(annotationSnapshotIdOfSource({ kind: 'plugin', plugin: 'dsh-web-review', snapshotId: id })).toBe(id)
+  })
+
+  it('rejects unrelated, incomplete, and oversized sources', () => {
+    expect(annotationSnapshotIdOfSource({ kind: 'plugin', plugin: 'other', snapshotId: 'snapshot-1' })).toBeUndefined()
+    expect(annotationSnapshotIdOfSource({ kind: 'plugin:dsh-web-review' })).toBeUndefined()
+    expect(annotationSnapshotIdOfSource({ kind: 'plugin:dsh-web-review', snapshotId: 'x'.repeat(ANNOTATION_LIMITS.snapshotId + 1) })).toBeUndefined()
+  })
+})
+
 describe('formatAnnotationContext', () => {
   it('uses stable trust labels and the browser-comment shape', () => {
     const output = formatAnnotationContext(snapshot())
@@ -395,7 +410,7 @@ describe('pending annotation admission', () => {
     expect(decision.messages[0]).toBe(existing)
     expect(decision.messages[1]).toMatchObject({
       source: {
-        kind: 'plugin', plugin: 'dsh-web-review', form: 'snapshot',
+        kind: 'plugin:dsh-web-review', form: 'snapshot',
         snapshotId: expect.any(String),
         sections: [
           expect.objectContaining({ name: 'Overview' }),
@@ -456,7 +471,7 @@ describe('pending annotation admission', () => {
     expect(queued.messages[0]).toBe(userPrompt)
     expect(queued.messages[1]).toMatchObject({
       source: {
-        kind: 'plugin', plugin: 'dsh-web-review', form: 'snapshot',
+        kind: 'plugin:dsh-web-review', form: 'snapshot',
         snapshotId: expect.any(String),
         sections: expect.arrayContaining([expect.objectContaining({ name: 'Overview' })]),
       },
@@ -509,7 +524,7 @@ describe('pending annotation admission', () => {
     })
     expect(decision.messages[1]).toMatchObject({
       source: {
-        kind: 'plugin', plugin: 'dsh-web-review', form: 'snapshot',
+        kind: 'plugin:dsh-web-review', form: 'snapshot',
         snapshotId: expect.any(String), sections: expect.any(Array),
       },
       content: [{ type: 'text', text: expect.stringContaining('# Browser comments') }],

@@ -9,15 +9,14 @@ import {
   IconLoadingOutline16,
   IconQueueOutline14,
   IconWarningOutline16,
-} from '@deepseek-ai/dsh-client-ui-primitives'
+} from './icons.ts'
 import type { BakedActions, InjectFace, PropsLocale, PropsRuntime } from '@deepseek-ai/dsh-client-ui-slots'
 import type { ObservableSnapshot } from '@deepseek-ai/dsh-client-runtime/client'
-import type { ConversationNode } from '@deepseek-ai/dsh-client-runtime/client'
 import {
-  annotationSnapshotIdOfSource,
   type AnnotationDraft,
   type AnnotationSyncReceipt,
 } from '../annotation-contract.ts'
+import { latestAnnotationContextIdOf } from './annotation-context-lookup.ts'
 import { annotationDraft } from './annotation-snapshot.ts'
 import type { ElementSnapshot, PickItem } from './contract.ts'
 import type { WebviewActions, WebviewState } from './stores.ts'
@@ -64,17 +63,10 @@ function sourceOf(pick: PickItem): string {
   return anchor.component.trim() === '' ? source : `${source} · ${anchor.component}`
 }
 
-function annotationContextId(node: ConversationNode): ReturnType<typeof annotationSnapshotIdOfSource> {
-  return node.kind === 'context' ? annotationSnapshotIdOfSource(node.source) : undefined
-}
-
 /** Annotation composer capsule and hover/focus detail card. */
 export function DraftOverlayBar({ useWebviewStore, useSession, actions, syncAnnotations, openPreview, t }: WebviewDockProps) {
   const state = useWebviewStore((s) => s)
-  const latestAnnotationContextId = useSession((session) => {
-    const node = session.nodes.findLast(candidate => annotationContextId(candidate) !== undefined)
-    return node === undefined ? undefined : annotationContextId(node)
-  })
+  const latestAnnotationContextId = useSession(session => latestAnnotationContextIdOf(session))
   const [open, setOpen] = useState(false)
   const [retry, setRetry] = useState(0)
   const detailsId = useId()

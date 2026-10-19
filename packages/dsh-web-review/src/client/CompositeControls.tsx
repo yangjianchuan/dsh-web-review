@@ -1,5 +1,5 @@
 import { useRef, useState, type ReactNode } from 'react'
-import { IconLinkOutline14 } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconLinkOutline14 } from './icons.ts'
 import {
   ColorControl,
   ScrubNumber,

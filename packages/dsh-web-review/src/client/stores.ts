@@ -5,7 +5,7 @@
  * annotation picks shared by both registrations, and the focus signal the dock
  * sends to the preview tab (detail-row click → locate the element in the iframe).
  */
-import { defineStore } from '@deepseek-ai/dsh-client-runtime/client'
+import { defineStore } from '@deepseek-ai/dsh-client-store'
 import type { AnnotationSnapshotId } from '../annotation-contract.ts'
 import type { UiSkillName } from '../ui-skills.ts'
 import type { PickItem } from './contract.ts'
@@ -43,6 +43,14 @@ export interface WebviewState {
  * Store factory: state + the complete write set. Components write only
  * through the baked actions; production code never calls create() outside
  * apply (the framework owns instance lifecycle).
+ *
+ * `defineStore` comes from `@deepseek-ai/dsh-client-store`, the module the web
+ * frontend seeds into its platform table. The older
+ * `@deepseek-ai/dsh-client-runtime/client` specifier is no longer published
+ * there, and the module table throws on an unregistered name, so naming the
+ * live module is a correctness requirement rather than a preference. rc.8
+ * typechecks against the same declaration through the path mapping in
+ * `tsconfig.client.json` (both lines export the identical factory).
  */
 export function createWebviewStore() {
   return defineStore({

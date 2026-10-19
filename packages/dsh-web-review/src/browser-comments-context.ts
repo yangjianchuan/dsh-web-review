@@ -38,10 +38,14 @@ export interface BrowserCommentsPresentationComment {
  * Durable source shape presented by the harness's standard `snapshot`
  * context form: the expanded row body renders one named section per
  * contribution, in the exact order the model read them.
+ *
+ * `kind` is producer-owned. DSH session format v4 refuses the retired
+ * `{ kind: 'plugin', plugin: '<name>' }` wrapper and its migration rewrites
+ * that wrapper into `plugin:<name>`, so this literal is the same identity
+ * before and after the upgrade.
  */
 export interface BrowserCommentsContextSource {
-  readonly kind: 'plugin'
-  readonly plugin: 'dsh-web-review'
+  readonly kind: 'plugin:dsh-web-review'
   readonly form: 'snapshot'
   readonly snapshotId: AnnotationSnapshotIdType
   readonly sections: readonly ContextSnapshotSection[]
@@ -86,11 +90,24 @@ function boundedString(value: unknown, cap: number, allowEmpty = true): string |
   return value
 }
 
+/**
+ * Accept a stored Browser Comments source in either the producer-owned form or
+ * the retired rc.8 wrapper, and return the canonical producer-owned shape.
+ * Sessions written before DSH session format v4 carry the wrapper; the format
+ * migration rewrites it on read, but a same-version session log may still hand
+ * this parser the original record.
+ */
 export function browserCommentsContextSourceOf(value: unknown): BrowserCommentsContextSource | undefined {
-  const source = exactRecord(value, ['kind', 'plugin', 'form', 'snapshotId', 'sections'])
+  const wrapper = exactRecord(value, ['kind', 'plugin', 'form', 'snapshotId', 'sections'])
+  const owner = exactRecord(value, ['kind', 'form', 'snapshotId', 'sections'])
+  const source = wrapper ?? owner
+  if (source === undefined) return undefined
+  const producerOwned = wrapper === undefined
   if (
-    source === undefined || source.kind !== 'plugin' || source.plugin !== 'dsh-web-review'
-    || source.form !== 'snapshot'
+    source.form !== 'snapshot'
+    || (producerOwned
+      ? source.kind !== 'plugin:dsh-web-review'
+      : source.kind !== 'plugin' || source.plugin !== 'dsh-web-review')
   ) return undefined
   const snapshotId = boundedString(source.snapshotId, ANNOTATION_LIMITS.snapshotId, false)
   if (snapshotId === undefined || !Array.isArray(source.sections) || source.sections.length < 1
@@ -104,8 +121,7 @@ export function browserCommentsContextSourceOf(value: unknown): BrowserCommentsC
     sections.push({ name, text })
   }
   return {
-    kind: 'plugin',
-    plugin: 'dsh-web-review',
+    kind: 'plugin:dsh-web-review',
     form: 'snapshot',
     snapshotId: AnnotationSnapshotId(snapshotId),
     sections,

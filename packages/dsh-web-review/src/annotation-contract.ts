@@ -75,7 +75,7 @@ export function annotationSnapshotIdOfSource(source: unknown): AnnotationSnapsho
   const record = source as Record<string, unknown>
   const snapshotId = record.snapshotId
   if (
-    record.kind !== 'plugin' || record.plugin !== 'dsh-web-review'
+    !((record.kind === 'plugin' && record.plugin === 'dsh-web-review') || record.kind === 'plugin:dsh-web-review')
     || typeof snapshotId !== 'string' || snapshotId.length < 1
     || snapshotId.length > ANNOTATION_LIMITS.snapshotId
   ) return undefined

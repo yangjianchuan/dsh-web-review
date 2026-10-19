@@ -45,8 +45,7 @@ describe('Browser Comments durable presentation', () => {
 
   it('accepts only the exact snapshot-form payload and declines malformed or foreign records', () => {
     const source = {
-      kind: 'plugin',
-      plugin: 'dsh-web-review',
+      kind: 'plugin:dsh-web-review',
       form: 'snapshot',
       snapshotId: AnnotationSnapshotId('snapshot-1'),
       sections: [
@@ -55,7 +54,7 @@ describe('Browser Comments durable presentation', () => {
       ],
     }
     expect(browserCommentsContextSourceOf(source)).toEqual(source)
-    expect(browserCommentsContextSourceOf({ ...source, plugin: 'foreign' })).toBeUndefined()
+    expect(browserCommentsContextSourceOf({ ...source, kind: 'plugin:foreign' })).toBeUndefined()
     expect(browserCommentsContextSourceOf({ ...source, extra: true })).toBeUndefined()
     expect(browserCommentsContextSourceOf({ ...source, form: 'browser-comments' })).toBeUndefined()
     expect(browserCommentsContextSourceOf({ ...source, sections: [] })).toBeUndefined()
@@ -63,5 +62,23 @@ describe('Browser Comments durable presentation', () => {
       ...source,
       sections: [{ name: '', text: 'x' }, { name: 'ok', text: 'y' }],
     })).toBeUndefined()
+  })
+
+  it('normalizes the retired rc.8 plugin wrapper to the producer-owned source', () => {
+    const legacy = {
+      kind: 'plugin',
+      plugin: 'dsh-web-review',
+      form: 'snapshot',
+      snapshotId: AnnotationSnapshotId('snapshot-1'),
+      sections: [{ name: 'Overview', text: '# Browser comments' }],
+    }
+    expect(browserCommentsContextSourceOf(legacy)).toEqual({
+      kind: 'plugin:dsh-web-review',
+      form: 'snapshot',
+      snapshotId: AnnotationSnapshotId('snapshot-1'),
+      sections: [{ name: 'Overview', text: '# Browser comments' }],
+    })
+    expect(browserCommentsContextSourceOf({ ...legacy, plugin: 'foreign' })).toBeUndefined()
+    expect(browserCommentsContextSourceOf({ ...legacy, kind: 'plugin:foreign' })).toBeUndefined()
   })
 })

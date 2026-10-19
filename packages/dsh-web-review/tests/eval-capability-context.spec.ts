@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { existsSync, readFileSync, rmSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
+import { basename, join, resolve } from 'node:path'
 import { armContextTexts } from '../../../eval/arm-context.ts'
 import { runnerTaskPayload } from '../../../eval/runner/payload.ts'
 import { runDirFor, stageIsolatedWorkspace } from '../../../eval/runner/run-one.ts'
@@ -90,7 +91,7 @@ describe('plugin capability eval contexts', () => {
     expect(path).not.toContain('secret-task')
     expect(path).not.toContain('text-only')
     expect(path).not.toContain('-r7-')
-    expect(path).toMatch(/\/run-[0-9a-f-]+$/u)
+    expect(basename(path)).toMatch(/^run-[0-9a-f-]+$/u)
   })
 
   it('stages fixture contents inside the isolated model workspace', () => {
@@ -102,7 +103,7 @@ describe('plugin capability eval contexts', () => {
     const isolated = stageIsolatedWorkspace(task)
     try {
       expect(existsSync(`${isolated.workspaceDir}/index.html`)).toBe(true)
-      expect(isolated.workspaceDir).toBe(`${isolated.liveRoot}/workspace`)
+      expect(resolve(isolated.workspaceDir)).toBe(resolve(join(isolated.liveRoot, 'workspace')))
     } finally {
       rmSync(isolated.liveRoot, { recursive: true, force: true })
     }

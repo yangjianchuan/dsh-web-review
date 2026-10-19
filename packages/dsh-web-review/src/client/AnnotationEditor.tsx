@@ -5,7 +5,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { IconCheckOutline16 } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconCheckOutline16 } from './icons.ts'
 import type { Translate } from '@deepseek-ai/dsh-client-ui-slots'
 import type {
   AnnotationStyleChange,

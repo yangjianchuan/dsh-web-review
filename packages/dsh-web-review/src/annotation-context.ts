@@ -37,8 +37,21 @@ import {
   type BrowserCommentsPresentation,
 } from './browser-comments-context.ts'
 
-/** Plugin provenance recorded on every injected context message. */
-export const ANNOTATION_SOURCE = { kind: 'plugin', plugin: 'dsh-web-review' } as const
+/**
+ * Producer-owned provenance recorded on every injected context message.
+ *
+ * DSH session format v4 refuses the retired `{ kind: 'plugin', plugin }`
+ * wrapper and admits any other non-empty `kind`, so the producer names itself
+ * directly. The harness `MessageSource` union is documented as merge-extensible
+ * for exactly this: plugins add their own kinds, so the record is asserted at
+ * the one construction site instead of widening the published union.
+ */
+export const ANNOTATION_SOURCE = { kind: 'plugin:dsh-web-review' } as const
+
+/** Narrow the producer-owned record to the harness source union at its one use site. */
+export function annotationMessageSource(): UserMessage['source'] {
+  return ANNOTATION_SOURCE as unknown as UserMessage['source']
+}
 
 export interface PendingAnnotationContext {
   snapshotId: AnnotationSnapshotIdType
@@ -501,14 +514,14 @@ export async function attachPendingAnnotationContext(
     sections: pending.sections,
   }
   const annotation = createUserMessage({
-    // rc.8 renders the standard `snapshot` context form: the harness's
+    // The running harness renders the standard `snapshot` context form: its
     // ContextInjectionRow shows the sections from this source and renders
     // the supersedes sentence as its own caption.
     source: annotationSource as unknown as UserMessage['source'],
     content: [{ type: 'text', text: pending.context }],
   })
   const reminder = reminders.length === 0 ? [] : [createUserMessage({
-    source: ANNOTATION_SOURCE,
+    source: annotationMessageSource(),
     content: [{ type: 'text', text: formatLoadedSkillReminder(reminders) }],
   })]
   return {

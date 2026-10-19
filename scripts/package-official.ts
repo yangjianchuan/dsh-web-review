@@ -1,7 +1,7 @@
 /** Assemble a prebuilt bundle tarball and checksum for DSH's official profile installer. */
 import { spawnSync } from 'node:child_process'
 import { createHash } from 'node:crypto'
-import { cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { cpSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { basename, dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -18,7 +18,6 @@ const sourceManifest = JSON.parse(readFileSync(join(source, 'package.json'), 'ut
   dsh: { client: unknown }
 }
 
-rmSync(staging, { recursive: true, force: true })
 mkdirSync(join(staging, 'lib'), { recursive: true })
 mkdirSync(join(staging, 'docs', 'assets'), { recursive: true })
 mkdirSync(join(staging, 'skills'), { recursive: true })

@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { IconChevronDownOutline14, IconChevronRightOutline14 } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconChevronDownOutline14, IconChevronRightOutline14 } from './icons.ts'
 import type { Translate } from '@deepseek-ai/dsh-client-ui-slots'
 import type {
   PreviewElementHandle,

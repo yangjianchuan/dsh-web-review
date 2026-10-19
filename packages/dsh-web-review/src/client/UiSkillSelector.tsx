@@ -1,6 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
-import { IconChevronDownOutline14 } from '@deepseek-ai/dsh-client-ui-primitives'
+import { IconChevronDownOutline14 } from './icons.ts'
 import type { Translate } from '@deepseek-ai/dsh-client-ui-slots'
 import { UI_SKILLS, type UiSkillName } from '../ui-skills.ts'
 import type { WebviewKey } from './locales.ts'
