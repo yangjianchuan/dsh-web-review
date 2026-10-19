@@ -5,21 +5,17 @@ All notable changes to `dsh-web-review` are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.5.1] - 2026-10-19
 
 ### Added
 
-- `pnpm install:dsh [profile]` installs this checkout into a DSH profile through `dsh plugin add`, which also mounts it as a profile bundle layer
-- `scripts/verify-live-tab.mjs` drives the running GUI and asserts the preview tab mounts without slot crashes
+- adapt annotation context, icon resolution, and transcript lookup for DSH v4
 
 ### Fixed
 
-- send annotation context with a producer-owned message source so DSH session format v4 accepts it, while still reading the retired `{ kind: 'plugin' }` wrapper from earlier sessions
-- resolve client icons against either host primitive line (`*OutlineRegular` on 0.2.x, size-suffixed names on rc.8) instead of pinning one, and degrade to a placeholder glyph rather than an undefined component (React #130)
-- import the store factory from `@deepseek-ai/dsh-client-store`, the module the web frontend actually seeds; the removed `@deepseek-ai/dsh-client-runtime/client` specifier made the whole plugin fail to activate
-- read the session transcript structurally, so the annotation dock works with both the rc.8 ordered array and the 0.2.x keyed collection (`order` + `nodes.get`) instead of crashing the dock slot
+- improve annotation context and Windows linking
 
-## [0.5.0] - 2026-08-25
+## [0.5.0] - 2026-08-26
 
 ## [0.5.0-beta.1] - 2026-08-25
 
@@ -51,21 +47,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Internal
 
 - align welcome notice acknowledgement to the reviewed baseline
-
-## [0.4.0-beta.0] - 2026-08-20
-
-### Changed
-
-- bind annotation context to the queued user message
-- archive page snapshots (HTML tree + screenshot) on annotated sends
-
-### Internal
-
-- align welcome notice acknowledgement to the reviewed baseline
-- numbered report archives with commit hash inside the report
-- archive combined long-task A/B report (f11362b cohort)
-- combined multi-target long tasks (todo/shop/landing/forms combos)
-- snapshot A/B arm, per-run token attribution, versioned report archive
 
 ## [0.3.0] - 2026-08-17
 
@@ -133,53 +114,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.0] - 2026-08-13
 
-### Internal
-
-- trust reviewed release lockfile
-- use public DSH npm packages
-- add English README
-- streamline user-facing README
-- prepare public npm installation guide
-- separate user and contributor guides
-- add npm 0.1.0 release plan
-- publish package publicly
-- add local tarball installation smoke test
-- publish privately under canglongcl
-- use private npm development packages
-
-## [0.0.4-rc.2] - 2026-08-13
-
-### Internal
-
-- release 0.0.4-rc.2
-- add target ownership and text identity to annotation context
-
-## [0.0.4-rc.1] - 2026-08-12
-
-### Internal
-
-- add built-in UI skills
-- add private npm release workflow
-- isolate remote previews by origin
-- add element tree scroll affordance
-- align acceptance launcher with 0811
-- support harness 0811 contracts
-- add movable resizable annotation editor
-- add CSS keyword menus and acceptance history
-- harden TypeScript boundaries
-- ignore absent-agent clears
-- refine corner radius glyphs
-
-## [0.0.3] - 2026-08-11
-
-### Internal
-
-- release v0.0.3
-- animate element selection feedback
-- add README demo
-
-## [0.0.2] - 2026-08-11
-
 ### Changed
 
 - native browser context injection and annotation dock
@@ -198,6 +132,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Internal
 
+- trust reviewed release lockfile
+- use public DSH npm packages
+- add English README
+- streamline user-facing README
+- prepare public npm installation guide
+- separate user and contributor guides
+- add npm 0.1.0 release plan
+- publish package publicly
+- add local tarball installation smoke test
+- publish privately under canglongcl
+- use private npm development packages
+- release 0.0.4-rc.2
+- add target ownership and text identity to annotation context
+- add built-in UI skills
+- add private npm release workflow
+- isolate remote previews by origin
+- add element tree scroll affordance
+- align acceptance launcher with 0811
+- support harness 0811 contracts
+- add movable resizable annotation editor
+- add CSS keyword menus and acceptance history
+- harden TypeScript boundaries
+- ignore absent-agent clears
+- refine corner radius glyphs
+- release v0.0.3
+- animate element selection feedback
+- add README demo
 - add local release packaging
 - bump version to 0.0.2
 - add element hierarchy selector
@@ -209,17 +170,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - add visual web review workflow
 - TypeScript-only repo, e2e suite, git hooks and quality gates
 
+[0.5.1]: https://github.com/CanglongCl/dsh-web-review/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/CanglongCl/dsh-web-review/compare/v0.5.0-beta.1...v0.5.0
 [0.5.0-beta.1]: https://github.com/CanglongCl/dsh-web-review/compare/v0.4.1-beta.1...v0.5.0-beta.1
 [0.4.1-beta.1]: https://github.com/CanglongCl/dsh-web-review/compare/v0.4.1-beta.0...v0.4.1-beta.1
-[0.4.1-beta.0]: https://github.com/CanglongCl/dsh-web-review/compare/v0.4.0-beta.0...v0.4.1-beta.0
-[0.4.0-beta.0]: https://github.com/CanglongCl/dsh-web-review/compare/v0.3.0...v0.4.0-beta.0
+[0.4.1-beta.0]: https://github.com/CanglongCl/dsh-web-review/compare/v0.3.0...v0.4.1-beta.0
 [0.3.0]: https://github.com/CanglongCl/dsh-web-review/compare/v0.3.0-rc.2...v0.3.0
 [0.3.0-rc.2]: https://github.com/CanglongCl/dsh-web-review/compare/v0.3.0-rc.1...v0.3.0-rc.2
 [0.3.0-rc.1]: https://github.com/CanglongCl/dsh-web-review/compare/v0.2.0...v0.3.0-rc.1
 [0.2.0]: https://github.com/CanglongCl/dsh-web-review/compare/v0.1.0...v0.2.0
-[0.1.0]: https://github.com/CanglongCl/dsh-web-review/compare/v0.0.4-rc.2...v0.1.0
-[0.0.4-rc.2]: https://github.com/CanglongCl/dsh-web-review/compare/v0.0.4-rc.1...v0.0.4-rc.2
-[0.0.4-rc.1]: https://github.com/CanglongCl/dsh-web-review/compare/v0.0.3...v0.0.4-rc.1
-[0.0.3]: https://github.com/CanglongCl/dsh-web-review/compare/v0.0.2...v0.0.3
-[0.0.2]: https://github.com/CanglongCl/dsh-web-review/commits/v0.0.2
+[0.1.0]: https://github.com/CanglongCl/dsh-web-review/commits/v0.1.0
